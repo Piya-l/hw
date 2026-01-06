@@ -1,0 +1,36 @@
+name: External Grader Callback
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  notify-grader:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Send submission metadata to external grader
+        run: |
+          curl -X POST https://ku.piya.dev/github_callback \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer ${{ secrets.GRADER_TOKEN }}" \
+            -d '{
+              "event": "submission",
+              "repository": {
+                "full_name": "${{ github.repository }}",
+                "clone_url": "https://github.com/${{ github.repository }}.git",
+                "owner": "${{ github.repository_owner }}"
+              },
+              "commit": {
+                "sha": "${{ github.sha }}",
+                "ref": "${{ github.ref }}"
+              },
+              "actor": {
+                "username": "${{ github.actor }}"
+              },
+              "run": {
+                "run_id": "${{ github.run_id }}",
+                "run_number": "${{ github.run_number }}"
+              }
+            }'
